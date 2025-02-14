@@ -97,8 +97,8 @@ const Message = styled.div`
   border-radius: 5px;
   color: #ffffff;
   font-size: 1rem;
-  animation: ${(props) => (props.success ? fadeIn : shake)} 0.5s ease-in-out;
-  background-color: ${(props) => (props.success ? "#28a745" : "#dc3545")};
+  animation: ${(props) => (props.$success ? fadeIn : shake)} 0.5s ease-in-out;
+  background-color: ${(props) => (props.$success ? "#28a745" : "#dc3545")};
 `;
 
 const Link = styled.a`
@@ -115,7 +115,7 @@ const Link = styled.a`
 
 // Login Component
 const Login = () => {
-  const [name, setName] = useState("");
+  const [emailOrName, setEmailOrName] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState({ text: "", success: false });
   const navigate = useNavigate();
@@ -123,11 +123,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    const userData = { name, password };
+    const userData = { emailOrName, password };
   
     try {
       const response = await axios.post(
-        "http://192.168.133.156:5000/auth/login",
+        "http://192.168.157.156:5000/auth/login",
         userData
       );
       localStorage.setItem("token", response.data.token);
@@ -145,7 +145,6 @@ const Login = () => {
       });
     }
   };
-  
 
   return (
     <Container>
@@ -154,9 +153,9 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <Input
             type="text"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            placeholder="Email or Name"
+            value={emailOrName}
+            onChange={(e) => setEmailOrName(e.target.value)}
           />
           <Input
             type="password"
@@ -166,7 +165,7 @@ const Login = () => {
           />
           <Button type="submit">Login</Button>
         </form>
-        {message.text && <Message success={message.success}>{message.text}</Message>}
+        {message.text && <Message $success={message.success}>{message.text}</Message>}
         <Link href=".">Forgot Password?</Link>
         <Link href="/signup">Create an Account</Link>
       </LoginBox>

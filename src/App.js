@@ -18,6 +18,7 @@ import ProductDetail from "./components/ProductDetails"; // Import your product 
 import AdminPage from './admin/admin'; // Import your admin page component
 import Cart from "./components/Cart";
 import Acc from "./components/UserAccount";
+import Order from "./components/orders"
 function App() {
   return (
     <Router> {/* This Router handles all routes in the app */}
@@ -31,6 +32,8 @@ function App() {
         <Route path="/account" element={<><Navbar /><Acc /><Footer /></>} />
         <Route path="/product/:id" element={<><Navbar /><ProductDetail /><Footer /></>} /> {/* Product detail page */}
         <Route path="/cart" element={<Cart />} />
+        <Route path="/orders" element={<><Navbar /><Order /><Footer /></>} />
+ 
 
         {/* Admin Pages without Navbar and Footer */}
         <Route path="/admin/*" element={<AdminPage />} /> {/* Admin page only renders admin layout */}

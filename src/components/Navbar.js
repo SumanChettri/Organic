@@ -35,9 +35,11 @@ const Brand = styled(Link)`
   }
 `;
 
-const MenuButton = styled.div`
-  font-size: 2rem;
+const MenuButton = styled.button`
+  background: none;
+  border: none;
   color: #fff;
+  font-size: 1.5rem;
   cursor: pointer;
   display: none;
 
@@ -46,32 +48,26 @@ const MenuButton = styled.div`
   }
 `;
 
-const Menu = styled.ul`
+const Menu = styled.div`
   display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  transition: all 0.5s ease;
+  gap: 20px;
 
   @media (max-width: 768px) {
     flex-direction: column;
     position: absolute;
-    top: 70px;
+    top: 60px;
     left: 0;
-    width: ${({ $isOpen }) => ($isOpen ? "40%" : "0")};
-    background: linear-gradient(90deg, #1f4037, #99f2c8);
-    overflow: hidden;
-    transform: ${({ $isOpen }) => ($isOpen ? "translateY(0)" : "translateY(-200%)")};
+    width: 100%;
+    background: #333;
+    padding: 20px;
+    transform: ${({ $isOpen }) => ($isOpen ? 'translateX(0)' : 'translateX(-100%)')};
+    transition: transform 0.3s ease-in-out;
   }
 `;
 
-const MenuItem = styled.li`
-  margin: 0 15px;
-  transition: margin 0.3s ease;
-
+const MenuItem = styled.div`
   @media (max-width: 768px) {
-    margin: 20px 20px;
-    text-align: center;
+    margin-bottom: 10px;
   }
 `;
 
@@ -157,7 +153,6 @@ const UserIcon = styled(Link)`
   }
 `;
 
-// Navbar Component
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -192,7 +187,7 @@ const Navbar = () => {
       try {
         const token = localStorage.getItem("token");
         if (token) {
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/cart`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setCartCount(response.data.length);

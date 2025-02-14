@@ -1,31 +1,35 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../db/connection'); // Adjust this path based on your project structure
+const { DataTypes } = require('sequelize');
+const sequelize = require('../db/connection');
 
-// Define the Product model
 const Product = sequelize.define('Product', {
   name: {
     type: DataTypes.STRING,
-    allowNull: false, // Makes the 'name' field required
+    allowNull: false,
   },
   price: {
-    type: DataTypes.FLOAT, // Use FLOAT for decimal values
-    allowNull: false, // Makes the 'price' field required
+    type: DataTypes.FLOAT,
+    allowNull: false,
+  },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
+  rating: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
   },
   priceUnit: {
     type: DataTypes.STRING,
-    allowNull: false, // Makes the 'priceUnit' field required
+    allowNull: false,
   },
   category: {
     type: DataTypes.STRING,
-    allowNull: false, // Makes the 'category' field required
+    allowNull: false,
   },
-  image: {
-    type: DataTypes.STRING, // Stores the file path for the image
-    allowNull: false, // Makes the 'image' field required
-  },
-}, {
-  tableName: 'products', // Ensure this matches your actual database table name
-  timestamps: false, // Set to false if you don't use createdAt/updatedAt fields
 });
 
 module.exports = Product;

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Extract token
+  const token = authHeader && authHeader.split(' ')[1];
   if (!token) {
     return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
@@ -11,7 +11,8 @@ const authenticateToken = (req, res, next) => {
     if (err) {
       return res.status(403).json({ error: 'Invalid or expired token.' });
     }
-    req.user = user; // Attach decoded user information to req
+    // Store the full user payload (including isAdmin) on req.user:
+    req.user = user;
     next();
   });
 };

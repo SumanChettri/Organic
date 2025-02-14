@@ -1,8 +1,8 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../db/connection");
+const { DataTypes } = require('sequelize');
+const sequelize = require('../db/connection');
 
 // Define User Model
-const User = sequelize.define("User", {
+const User = sequelize.define('User', {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -19,6 +19,10 @@ const User = sequelize.define("User", {
   phone: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  profileImage: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   pincode: {
     type: DataTypes.STRING,

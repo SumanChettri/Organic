@@ -151,7 +151,7 @@ const Signup = () => {
         formData.append('profilePhoto', profilePhoto);
 
         // Send POST request to backend
-        const response = await axios.post("http://192.168.171.156:5000/auth/register", formData, {
+        const response = await axios.post("http://192.168.157.156:5000/auth/register", formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

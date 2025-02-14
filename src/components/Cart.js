@@ -218,7 +218,7 @@ const Cart = () => {
     const fetchCart = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/cart`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Cart data:", response.data); // Debug: Check the data returned by the backend
@@ -234,7 +234,7 @@ const Cart = () => {
   const removeFromCart = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${process.env.REACT_APP_API_URL}/cart/${id}`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart(cart.filter((item) => item.id !== id));
@@ -247,7 +247,7 @@ const Cart = () => {
     try {
       const token = localStorage.getItem("token");
       console.log(`Updating quantity for item ${id} to ${quantity}`); // Debug: Log the quantity update
-      const response = await axios.put(`${process.env.REACT_APP_API_URL}/cart/${id}`, {
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, {
         quantity
       }, {
         headers: { Authorization: `Bearer ${token}` },
@@ -260,7 +260,7 @@ const Cart = () => {
   };
 
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + parseFloat(item.price) * item.quantity, 0).toFixed(2);
+    return cart.reduce((total, item) => total + parseFloat(item.Product.price) * item.quantity, 0).toFixed(2);
   };
 
   return (
@@ -272,15 +272,15 @@ const Cart = () => {
         {/* Cart Items */}
         <CartWrapper>
           {cart.map((item) => {
-            const imageUrl = `${process.env.REACT_APP_API_URL}${item.image}`;
+            const imageUrl = `${process.env.REACT_APP_API_URL}${item.Product.image}`;
             console.log("Image URL:", imageUrl); // Debug: Check the image URL
             return (
               <CartItem key={item.id}>
                 <ItemDetails>
-                  <ItemImage src={imageUrl} alt={item.name} onError={(e) => { e.target.onerror = null; e.target.src='/images/default-image.jpg'; }} />
+                  <ItemImage src={imageUrl} alt={item.Product.name} onError={(e) => { e.target.onerror = null; e.target.src='/images/default-image.jpg'; }} />
                   <ItemInfo>
-                    <ItemTitle>{item.name}</ItemTitle>
-                    <ItemPrice>₹{parseFloat(item.price).toFixed(2)}</ItemPrice>
+                    <ItemTitle>{item.Product.name}</ItemTitle>
+                    <ItemPrice>₹{parseFloat(item.Product.price).toFixed(2)}</ItemPrice>
                     <ItemQuantity>
                       <QuantityButton onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
                         <FaMinus />
@@ -305,17 +305,15 @@ const Cart = () => {
           <SummaryTitle>Order Summary</SummaryTitle>
           {cart.map((item) => (
             <SummaryItem key={item.id}>
-              <span>{item.name}</span>
-              <span>₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+              <span>{item.Product.name}</span>
+              <span>₹{(parseFloat(item.Product.price) * item.quantity).toFixed(2)}</span>
             </SummaryItem>
           ))}
           <SummaryTotal>
-            <span>Total</span>
+            <span>Total:</span>
             <span>₹{calculateTotal()}</span>
           </SummaryTotal>
-          <CheckoutButton onClick={() => alert("Checkout Successful!")}>
-            Proceed to Checkout
-          </CheckoutButton>
+          <CheckoutButton>Proceed to Checkout</CheckoutButton>
         </CheckoutSection>
       </CartContainer>
 

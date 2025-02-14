@@ -1,27 +1,24 @@
 const express = require('express');
-const pool = require('../db/connection');
+const Product = require('../models/Product'); // Ensure the path is correct
 
 const router = express.Router();
 
 router.get('/product/:id', async (req, res) => {
   try {
-    const productId = req.params.id;
+    const product = await Product.findByPk(req.params.id);
 
-    const query = 'SELECT * FROM products WHERE id = ?';
-    const [rows] = await pool.execute(query, [productId]);
-
-    if (rows.length === 0) {
+    if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const product = rows[0];
-    const imagePath = `${req.protocol}://${req.headers.host}/images/${rows[0].image}`;
+    const imagePath = `${req.protocol}://${req.headers.host}/images/${product.image}`;
 
-    console.log('Image Path:', imagePath); // Debug: Check what URL is being sent
+    console.log('Image Path:', imagePath);
+    console.log('Product Data:', product);
 
-    res.status(200).json({ ...product, images: [imagePath] });
+    res.status(200).json({ ...product.dataValues, images: [imagePath] });
   } catch (error) {
-    console.error('Error fetching product:', error);
+    console.error('Error fetching product:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

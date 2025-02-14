@@ -22,6 +22,7 @@
     "express": "^4.21.2",
     "framer-motion": "^11.14.4",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.5",
     "os-browserify": "^0.3.0",
@@ -38,6 +39,7 @@
     "slick-carousel": "^1.8.1",
     "stream-browserify": "^3.0.0",
     "styled-components": "^6.1.13",
+    "twin.macro": "^3.4.1",
     "util": "^0.12.5",
     "web-vitals": "^2.1.4",
     "webpack": "^5.97.1",
@@ -71,7 +73,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "autoprefixer": "^10.4.20",
     "path-browserify": "^1.0.1",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.16"
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17"
   }
 }

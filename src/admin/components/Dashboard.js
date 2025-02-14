@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import styled from 'styled-components';
 import { FaBox, FaTags, FaShoppingCart } from 'react-icons/fa';
+import { Container, Row, Col } from 'react-bootstrap';
 
-const DashboardContainer = styled.div`
+const DashboardContainer = styled(Container)`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -17,19 +19,13 @@ const DashboardContainer = styled.div`
   }
 `;
 
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+const StatsGrid = styled(Row)`
   width: 100%;
   max-width: 1200px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  gap: 20px;
 `;
 
-const StatsCard = styled(motion.div)`
+const StatsCard = styled(motion.create(Col))`
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -39,6 +35,7 @@ const StatsCard = styled(motion.div)`
   align-items: center;
   text-align: center;
   transition: transform 0.3s ease;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-10px);
@@ -82,15 +79,16 @@ const Dashboard = () => {
     categories: 0,
     orders: 0,
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://192.168.171.156:5000/stats');
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/stats`);
         setStats({
           products: response.data.productCount,
           categories: response.data.categoryCount,
-          orders: response.data.orderCount || 0, // Assuming you have an order count in your stats
+          orders: response.data.orderCount || 0,
         });
       } catch (err) {
         console.error('Error fetching stats', err);
@@ -100,32 +98,45 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
+  const handleCardClick = (path) => {
+    navigate(path);
+  };
+
   return (
     <DashboardContainer>
       <h1 className="fw-bold text-secondary mb-4" style={{ fontSize: '2.5rem' }}>Dashboard</h1>
       <StatsGrid>
         <StatsCard
+          as={motion.create.div}
+          xs={12} md={4}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          onClick={() => handleCardClick('./products')}
         >
           <FaBox className="icon" />
           <h3>Products</h3>
           <p>{stats.products}</p>
         </StatsCard>
         <StatsCard
+          as={motion.create.div}
+          xs={12} md={4}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          onClick={() => handleCardClick('./categories')}
         >
           <FaTags className="icon" />
           <h3>Categories</h3>
           <p>{stats.categories}</p>
         </StatsCard>
         <StatsCard
+          as={motion.create.div}
+          xs={12} md={4}
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
+          onClick={() => handleCardClick('./orders')}
         >
           <FaShoppingCart className="icon" />
           <h3>Orders</h3>

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { FaCartPlus, FaShoppingCart, FaStar } from "react-icons/fa";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import PaymentModal from './PaymentModal';
 
 // Styled Components
 const ProductDetailContainer = styled(motion.div)`
@@ -75,47 +76,50 @@ const ProductInfo = styled(motion.div)`
   gap: 20px;
 `;
 
-const ProductTitle = styled(motion.h1)`
+const ProductTitle = styled.h1`
   font-size: 2.5rem;
   color: #333;
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
 `;
 
-const ProductPrice = styled(motion.p)`
+const ProductPrice = styled.p`
   font-size: 1.5rem;
   color: #ff6600;
-
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
 `;
 
-const ProductDescription = styled(motion.p)`
+const ProductDescription = styled.p`
   font-size: 1rem;
   color: #666;
-
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-  }
 `;
 
-const RatingContainer = styled(motion.div)`
+const RatingContainer = styled.div`
   display: flex;
-  align-items: center;
   gap: 5px;
 `;
 
 const StarIcon = styled(FaStar)`
-  color: #ffcc00;
+  color: #ffcc29;
 `;
 
-const ButtonContainer = styled(motion.div)`
+const QuantitySelector = styled.div`
   display: flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+
+  button {
+    padding: 5px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  input {
+    width: 50px;
+    text-align: center;
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: 20px;
 `;
 
 const AddToCartButton = styled(motion.button)`
@@ -164,41 +168,9 @@ const OrderNowButton = styled(motion.button)`
   }
 `;
 
-const QuantitySelector = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  input {
-    width: 50px;
-    text-align: center;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-
-  button {
-    padding: 5px 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #0056b3;
-    }
-  }
-`;
-
-const ErrorMessage = styled.div`
-  margin-top: 20px;
-  padding: 10px;
-  border-radius: 5px;
-  color: #ffffff;
+const ErrorMessage = styled.p`
+  color: red;
   font-size: 1rem;
-  background-color: #dc3545;
-  text-align: center;
 `;
 
 const ProductDetail = () => {
@@ -207,6 +179,7 @@ const ProductDetail = () => {
   const [mainImage, setMainImage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -232,19 +205,18 @@ const ProductDetail = () => {
       setErrorMessage("Please log in to continue shopping.");
       setTimeout(() => {
         navigate('/login');
-      }, 2000); // Delay the redirection by 2 seconds
+      }, 2000);
       return;
     }
 
     try {
-      console.log("Token:", token); // Debug: Check if token is being retrieved correctly
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/cart`, {
-        product_id: product.id,
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/cart`, {
+        productId: product.id,
         quantity
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setErrorMessage(""); // Clear any previous error messages
+      setErrorMessage("");
       alert(response.data.message);
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -252,17 +224,39 @@ const ProductDetail = () => {
     }
   };
 
-  const orderNow = () => {
+  const handleOrder = async (paymentMethod) => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setErrorMessage("Please log in to continue shopping.");
+      setErrorMessage('Please log in to continue shopping.');
       setTimeout(() => {
         navigate('/login');
-      }, 2000); // Delay the redirection by 2 seconds
+      }, 2000);
       return;
     }
-
-    navigate('/cart');
+  
+    try {
+      console.log('Placing order with data:', {
+        user_id: 1, // Replace with actual user ID
+        product_id: product.id,
+        quantity,
+        paymentMethod,
+      });
+  
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/orders`, {
+        user_id: 1, // Replace with actual user ID
+        product_id: product.id,
+        quantity,
+        paymentMethod,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('Order response:', response.data);
+      alert(response.data.message);
+      navigate('/orders');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      setErrorMessage('Failed to place order');
+    }
   };
 
   if (!product) {
@@ -332,7 +326,7 @@ const ProductDetail = () => {
             <OrderNowButton
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={orderNow}
+              onClick={() => setShowPaymentModal(true)}
             >
               <FaShoppingCart /> Order Now
             </OrderNowButton>
@@ -340,6 +334,11 @@ const ProductDetail = () => {
           {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </ProductInfo>
       </ProductDetailWrapper>
+      <PaymentModal
+        show={showPaymentModal}
+        handleClose={() => setShowPaymentModal(false)}
+        handleOrder={handleOrder}
+      />
     </ProductDetailContainer>
   );
 };

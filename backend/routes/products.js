@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const pool = require('../db/connection'); // Import the connection pool
+const Product = require('../models/Product'); // Import Sequelize Product model
 
 const router = express.Router();
 
@@ -52,14 +52,16 @@ router.post('/products', upload.single('image'), async (req, res) => {
 
         const imagePath = `/images/${req.file.filename}`; // Path to the uploaded image
 
-        // Insert the product into the database
-        const query = `
-            INSERT INTO products (name, price, priceUnit, category, image) 
-            VALUES (?, ?, ?, ?, ?)
-        `;
-        const [result] = await pool.execute(query, [name, price, priceUnit, category, imagePath]);
+        // Insert the product into the database using Sequelize
+        const product = await Product.create({
+            name,
+            price,
+            priceUnit,
+            category,
+            image: imagePath,
+        });
 
-        res.status(201).json({ message: 'Product added successfully', productId: result.insertId });
+        res.status(201).json({ message: 'Product added successfully', product });
     } catch (error) {
         console.error('Error adding product:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -69,9 +71,7 @@ router.post('/products', upload.single('image'), async (req, res) => {
 // Get all products
 router.get('/products', async (req, res) => {
     try {
-        const query = 'SELECT * FROM products';
-        const [products] = await pool.execute(query);
-
+        const products = await Product.findAll(); // Fetch all products
         res.status(200).json(products);
     } catch (error) {
         console.error('Error fetching products:', error);
@@ -82,16 +82,13 @@ router.get('/products', async (req, res) => {
 // Get a product by ID
 router.get('/product/:id', async (req, res) => {
     try {
-        const productId = req.params.id;
+        const product = await Product.findByPk(req.params.id);
 
-        const query = 'SELECT * FROM products WHERE id = ?';
-        const [rows] = await pool.execute(query, [productId]);
-
-        if (rows.length === 0) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        res.status(200).json(rows[0]);
+        res.status(200).json(product);
     } catch (error) {
         console.error('Error fetching product:', error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -101,15 +98,13 @@ router.get('/product/:id', async (req, res) => {
 // Delete a product
 router.delete('/products/:id', async (req, res) => {
     try {
-        const productId = req.params.id;
+        const product = await Product.findByPk(req.params.id);
 
-        const query = 'DELETE FROM products WHERE id = ?';
-        const [result] = await pool.execute(query, [productId]);
-
-        if (result.affectedRows === 0) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
+        await product.destroy(); // Delete the product
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
         console.error('Error deleting product:', error);
@@ -120,27 +115,24 @@ router.delete('/products/:id', async (req, res) => {
 // Update a product
 router.put('/products/:id', upload.single('image'), async (req, res) => {
     try {
-        const productId = req.params.id;
-        const { name, price, priceUnit, category } = req.body;
-        const imagePath = req.file ? `/images/${req.file.filename}` : null;
+        const product = await Product.findByPk(req.params.id);
 
-        // Check if product exists
-        const checkQuery = 'SELECT * FROM products WHERE id = ?';
-        const [rows] = await pool.execute(checkQuery, [productId]);
-
-        if (rows.length === 0) {
+        if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
 
-        // Update the product
-        const updateQuery = `
-            UPDATE products 
-            SET name = ?, price = ?, priceUnit = ?, category = ?, image = COALESCE(?, image) 
-            WHERE id = ?
-        `;
-        await pool.execute(updateQuery, [name, price, priceUnit, category, imagePath, productId]);
+        const { name, price, priceUnit, category } = req.body;
+        const imagePath = req.file ? `/images/${req.file.filename}` : product.image;
 
-        res.status(200).json({ message: 'Product updated successfully' });
+        await product.update({
+            name: name || product.name,
+            price: price || product.price,
+            priceUnit: priceUnit || product.priceUnit,
+            category: category || product.category,
+            image: imagePath,
+        });
+
+        res.status(200).json({ message: 'Product updated successfully', product });
     } catch (error) {
         console.error('Error updating product:', error);
         res.status(500).json({ error: 'Internal Server Error' });
