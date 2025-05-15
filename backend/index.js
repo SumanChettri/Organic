@@ -3,7 +3,9 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
-const { sequelize } = require('./models'); // Import Sequelize connection
+const os = require('os'); // <-- New import
+const { sequelize } = require('./models');
+
 const authRoutes = require('./routes/auth');
 const cartRoutes = require('./routes/cart');
 const shopRoutes = require('./routes/shop');
@@ -14,15 +16,31 @@ const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/orders');
 const AdminLogin = require('./routes/adminAuth');
+
 const app = express();
 const port = process.env.PORT || 5000;
-const localIPAddress = '192.0.0.1';
+
+// 🔍 Get local IP address dynamically
+function getLocalIPAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+const localIPAddress = getLocalIPAddress();
+
 // Middleware
 app.use(bodyParser.json());
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 const corsOptions = {
-  origin: ['http://192.0.0.1:3000', 'http://localhost:3000'],
+  origin: [`http://${localIPAddress}:3000`, 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
@@ -37,7 +55,7 @@ app.use('/api', productDetailsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/stats', dashboardRoutes);
 app.use('/user', userRoutes);
-app.use('/api/orders', orderRoutes); // Updated to match frontend
+app.use('/api/orders', orderRoutes);
 app.use('/admin', AdminLogin);
 
 // Test Endpoint for JWT_SECRET
@@ -49,7 +67,7 @@ app.get('/test-secret', (req, res) => {
 });
 
 // Start Server After Database Sync
-sequelize.sync() // Remove alter: true
+sequelize.sync()
   .then(() => {
     console.log('Database schema updated successfully!');
     app.listen(port, () => {
@@ -57,7 +75,6 @@ sequelize.sync() // Remove alter: true
       console.log(`http://${localIPAddress}:${port}`);
       console.log(`http://localhost:${port}`);
       console.log("JWT Secret:", process.env.JWT_SECRET);
-
     });
   })
   .catch((err) => {
