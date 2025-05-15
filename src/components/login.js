@@ -127,7 +127,7 @@ const Login = () => {
   
     try {
       const response = await axios.post(
-        "http://192.168.14.156:5000/auth/login",
+        `${process.env.REACT_APP_API_URL}/auth/login`,
         userData
       );
       localStorage.setItem("token", response.data.token);

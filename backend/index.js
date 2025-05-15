@@ -16,13 +16,13 @@ const orderRoutes = require('./routes/orders');
 const AdminLogin = require('./routes/adminAuth');
 const app = express();
 const port = process.env.PORT || 5000;
-const localIPAddress = '192.168.10.156';
+const localIPAddress = '192.0.0.1';
 // Middleware
 app.use(bodyParser.json());
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 const corsOptions = {
-  origin: ['http://192.168.157.156:3000', 'http://localhost:3000'],
+  origin: ['http://192.0.0.1:3000', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
