@@ -1,62 +1,43 @@
-import React, { useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
-import styled from 'styled-components';
+// filepath: c:\Users\Administrator\Desktop\Organic\src\components\PaymentModal.js
+import React from 'react';
 
-const PaymentModal = ({ show, handleClose, handleOrder }) => {
-  const [paymentMethod, setPaymentMethod] = useState('card');
+const PaymentModal = ({ amount, currency }) => {
+  const handlePayment = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, currency }),
+      });
 
-  const handlePaymentChange = (e) => {
-    setPaymentMethod(e.target.value);
+      const order = await response.json();
+
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Organic Store',
+        description: 'Purchase Products',
+        order_id: order.id,
+        handler: (response) => {
+          alert('Payment Successful!');
+          console.log(response);
+        },
+        prefill: {
+          name: 'Your Name',
+          email: 'your.email@example.com',
+          contact: '9999999999',
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+    }
   };
 
-  const handleSubmit = () => {
-    handleOrder(paymentMethod);
-    handleClose();
-  };
-
-  return (
-    <Modal show={show} onHide={handleClose} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Select Payment Method</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Form>
-          <Form.Check
-            type="radio"
-            label="Card"
-            name="paymentMethod"
-            value="card"
-            checked={paymentMethod === 'card'}
-            onChange={handlePaymentChange}
-          />
-          <Form.Check
-            type="radio"
-            label="UPI"
-            name="paymentMethod"
-            value="upi"
-            checked={paymentMethod === 'upi'}
-            onChange={handlePaymentChange}
-          />
-          <Form.Check
-            type="radio"
-            label="Cash on Delivery (COD)"
-            name="paymentMethod"
-            value="cod"
-            checked={paymentMethod === 'cod'}
-            onChange={handlePaymentChange}
-          />
-        </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>
-          Close
-        </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          Confirm
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
+  return <button onClick={handlePayment}>Pay Now</button>;
 };
 
 export default PaymentModal;

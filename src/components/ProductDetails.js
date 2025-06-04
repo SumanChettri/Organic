@@ -1,177 +1,7 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { FaCartPlus, FaShoppingCart, FaStar } from "react-icons/fa";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import PaymentModal from './PaymentModal';
-
-// Styled Components
-const ProductDetailContainer = styled(motion.div)`
-  padding: 20px;
-  background: linear-gradient(135deg, #f2f2f2, #e1e5ea);
-  min-height: 100vh;
-`;
-
-const ProductDetailWrapper = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-  }
-`;
-
-const ProductImageGallery = styled(motion.div)`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`;
-
-const MainImage = styled(motion.img)`
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  cursor: zoom-in;
-
-  @media (max-width: 768px) {
-    height: 300px;
-  }
-`;
-
-const ThumbnailContainer = styled(motion.div)`
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-`;
-
-const Thumbnail = styled(motion.img)`
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-
-  @media (max-width: 768px) {
-    width: 60px;
-    height: 60px;
-  }
-`;
-
-const ProductInfo = styled(motion.div)`
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
-const ProductTitle = styled.h1`
-  font-size: 2.5rem;
-  color: #333;
-`;
-
-const ProductPrice = styled.p`
-  font-size: 1.5rem;
-  color: #ff6600;
-`;
-
-const ProductDescription = styled.p`
-  font-size: 1rem;
-  color: #666;
-`;
-
-const RatingContainer = styled.div`
-  display: flex;
-  gap: 5px;
-`;
-
-const StarIcon = styled(FaStar)`
-  color: #ffcc29;
-`;
-
-const QuantitySelector = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  button {
-    padding: 5px 10px;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  input {
-    width: 50px;
-    text-align: center;
-  }
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  gap: 20px;
-`;
-
-const AddToCartButton = styled(motion.button)`
-  padding: 15px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #218838;
-  }
-
-  @media (max-width: 768px) {
-    padding: 10px 15px;
-    font-size: 1rem;
-  }
-`;
-
-const OrderNowButton = styled(motion.button)`
-  padding: 15px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
-  }
-
-  @media (max-width: 768px) {
-    padding: 10px 15px;
-    font-size: 1rem;
-  }
-`;
-
-const ErrorMessage = styled.p`
-  color: red;
-  font-size: 1rem;
-`;
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -179,7 +9,6 @@ const ProductDetail = () => {
   const [mainImage, setMainImage] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -224,7 +53,7 @@ const ProductDetail = () => {
     }
   };
 
-  const handleOrder = async (paymentMethod) => {
+  const handleOrder = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setErrorMessage('Please log in to continue shopping.');
@@ -233,24 +62,15 @@ const ProductDetail = () => {
       }, 2000);
       return;
     }
-  
+
     try {
-      console.log('Placing order with data:', {
-        user_id: 1, // Replace with actual user ID
-        product_id: product.id,
-        quantity,
-        paymentMethod,
-      });
-  
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/orders`, {
-        user_id: 1, // Replace with actual user ID
         product_id: product.id,
         quantity,
-        paymentMethod,
+        paymentMethod: "Online"
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log('Order response:', response.data);
       alert(response.data.message);
       navigate('/orders');
     } catch (error) {
@@ -260,86 +80,107 @@ const ProductDetail = () => {
   };
 
   if (!product) {
-    return <div>Loading...</div>;
+    return <div className="text-center py-10">Loading...</div>;
   }
 
   return (
-    <ProductDetailContainer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <ProductDetailWrapper
-        initial={{ x: -100 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <ProductImageGallery>
-          <MainImage
+    <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen p-6">
+      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Image Gallery */}
+        <div>
+          <img
             src={mainImage}
             alt={product.name}
-            whileHover={{ scale: 1.1 }}
+            className="w-full h-96 object-cover rounded-lg cursor-pointer"
             onClick={() => window.open(mainImage, '_blank')}
           />
-          <ThumbnailContainer>
+          <div className="flex mt-4 space-x-4 overflow-x-auto">
             {product.images && product.images.map((img, index) => (
-              <Thumbnail
+              <img
                 key={index}
                 src={`${process.env.REACT_APP_API_URL}/${img}`}
                 alt={product.name}
+                className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform"
                 onClick={() => setMainImage(`${process.env.REACT_APP_API_URL}/${img}`)}
-                whileHover={{ scale: 1.1 }}
               />
             ))}
-          </ThumbnailContainer>
-        </ProductImageGallery>
-        <ProductInfo
-          initial={{ x: 100 }}
-          animate={{ x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <ProductTitle>{product.name}</ProductTitle>
-          <ProductPrice>₹{parseFloat(product.price).toFixed(2)} / {product.priceUnit}</ProductPrice>
-          <ProductDescription>{product.description}</ProductDescription>
-          <RatingContainer>
-            {Array.from({ length: product.rating }).map((_, index) => (
-              <StarIcon key={index} />
-            ))}
-          </RatingContainer>
-          <QuantitySelector>
-            <button onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}>-</button>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value)))}
-            />
-            <button onClick={() => setQuantity(quantity + 1)}>+</button>
-          </QuantitySelector>
-          <ButtonContainer>
-            <AddToCartButton
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          </div>
+        </div>
+
+        {/* Product Info */}
+        <div className="flex flex-col justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
+            <p className="text-xl text-green-600 mt-2">₹{parseFloat(product.price).toFixed(2)} / {product.priceUnit}</p>
+             {/* Static Ratings */}
+                <div className="flex items-center mt-2">
+                  {[...Array(5)].map((_, index) => (
+                    <FaStar key={index} className={`mr-1 ${index < 4 ? 'text-yellow-400' : 'text-gray-300'}`} />
+                  ))}
+                  <span className="ml-2 text-sm text-gray-600">(4.6/5 - 23 reviews)</span>
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-600 mt-4">{product.description}</p>
+
+                {/* Static Product Details */}
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-2">Product Highlights:</h2>
+                  <ul className="list-disc list-inside text-gray-700 space-y-1">
+                    <li>100% organic and pesticide-free</li>
+                    <li>Grown locally by certified farmers</li>
+                    <li>Storage: Keep refrigerated between 2–4°C</li>
+                  </ul>
+                </div>
+              </div>
+          {/* Quantity Selector */}
+          <div className="mt-6">
+            <label className="block text-gray-700 mb-2">Quantity</label>
+            <div className="flex items-center">
+              <button
+                onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+                className="px-3 py-1 bg-gray-300 text-gray-800 rounded-l hover:bg-gray-400"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value)))}
+                className="w-16 text-center border-t border-b border-gray-300"
+              />
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="px-3 py-1 bg-gray-300 text-gray-800 rounded-r hover:bg-gray-400"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-6 flex space-x-4">
+            <button
               onClick={addToCart}
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
             >
-              <FaCartPlus /> Add to Cart
-            </AddToCartButton>
-            <OrderNowButton
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowPaymentModal(true)}
+              <FaCartPlus className="mr-2" /> Add to Cart
+            </button>
+            <button
+              onClick={handleOrder}
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
-              <FaShoppingCart /> Order Now
-            </OrderNowButton>
-          </ButtonContainer>
-          {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
-        </ProductInfo>
-      </ProductDetailWrapper>
-      <PaymentModal
-        show={showPaymentModal}
-        handleClose={() => setShowPaymentModal(false)}
-        handleOrder={handleOrder}
-      />
-    </ProductDetailContainer>
+              <FaShoppingCart className="mr-2" /> Order Now
+            </button>
+          </div>
+
+          {/* Error Message */}
+          {errorMessage && (
+            <p className="text-red-500 mt-4">{errorMessage}</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 

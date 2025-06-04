@@ -3,7 +3,7 @@ import React from "react";
 import styled from "styled-components";
 
 const FooterContainer = styled.footer`
-  background: linear-gradient(90deg, #1f4037, #99f2c8);
+  background: linear-gradient(90deg, #1f4037, #99f2a0);
   color: #fff;
   padding: 20px 0;
   text-align: center;

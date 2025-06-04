@@ -1,44 +1,59 @@
-// src/App.js
-import 'bootstrap/dist/css/bootstrap.min.css'; // This imports the Bootstrap CSS
-import './App.css';
-import './index.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/footer";
 import Home from "./components/home";
 import Shop from "./components/shop";
 import Signup from "./components/signup";
 import Login from "./components/login";
-import ProductDetail from "./components/ProductDetails"; // Import your product detail component
-import AdminPage from './admin/admin'; // Import your admin page component
+import ProductDetail from "./components/ProductDetails";
+import AdminPage from './admin/admin';
 import Cart from "./components/Cart";
 import Acc from "./components/UserAccount";
-import Order from "./components/orders"
-function App() {
+import Order from "./components/orders";
+import About from './components/About';
+
+function AppContent({ isLoggedIn, setIsLoggedIn, handleLogin }) {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   return (
-    <Router> {/* This Router handles all routes in the app */}
+    <>
+      {!isAdminRoute && <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
       <Routes>
-        {/* User Pages with Navbar and Footer */}
-
-        <Route path="/" element={<><Navbar /><Home /><Footer /></>} />
-        <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
-        <Route path="/signup" element={<><Navbar /><Signup /><Footer /></>} />
-        <Route path="/shop" element={<><Navbar /><Shop /><Footer /></>} />
-        <Route path="/account" element={<><Navbar /><Acc /><Footer /></>} />
-        <Route path="/product/:id" element={<><Navbar /><ProductDetail /><Footer /></>} /> {/* Product detail page */}
+        <Route path="/admin/*" element={<AdminPage />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/account" element={<Acc />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/orders" element={<><Navbar /><Order /><Footer /></>} />
- 
-
-        {/* Admin Pages without Navbar and Footer */}
-        <Route path="/admin/*" element={<AdminPage />} /> {/* Admin page only renders admin layout */}
-
+        <Route path="/about" element={<About />} />
+        <Route path="/orders" element={<Order />} />
+        <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
+      {!isAdminRoute && <Footer />}
+    </>
+  );
+}
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogin = () => {
+    const token = localStorage.getItem("token");
+    if (token) setIsLoggedIn(true);
+  };
+
+  return (
+    <Router>
+      <AppContent isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} handleLogin={handleLogin} />
     </Router>
   );
 }

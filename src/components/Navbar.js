@@ -1,187 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { FaShoppingCart } from "react-icons/fa";
 import axios from "axios";
 
-// Styled Components
-const NavbarContainer = styled.nav`
-  background: linear-gradient(90deg, #1f4037, #99f2c8);
-  padding: 15px 20px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.3s ease-in-out;
-
-  @media (max-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-`;
-
-const Brand = styled(Link)`
-  font-size: 2rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  color: #fff;
-  text-decoration: none;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: #ffcc29;
-  }
-`;
-
-const MenuButton = styled.button`
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: none;
-
-  @media (max-width: 768px) {
-    display: block;
-  }
-`;
-
-const Menu = styled.div`
-  display: flex;
-  gap: 20px;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    position: absolute;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    background: #333;
-    padding: 20px;
-    transform: ${({ $isOpen }) => ($isOpen ? 'translateX(0)' : 'translateX(-100%)')};
-    transition: transform 0.3s ease-in-out;
-  }
-`;
-
-const MenuItem = styled.div`
-  @media (max-width: 768px) {
-    margin-bottom: 10px;
-  }
-`;
-
-const MenuLink = styled(Link)`
-  font-size: 1.1rem;
-  color: #fff;
-  text-decoration: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-
-  &.active {
-    background-color: #ffcc29;
-    color: #000;
-  }
-
-  &:hover {
-    background-color: #ffcc29;
-    color: #000;
-  }
-`;
-
-const ActionButton = styled.button`
-  font-size: 1rem;
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  color: #fff;
-  background: #ff6b6b;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background: #ffcc29;
-    color: #000;
-  }
-`;
-
-const CartIcon = styled(Link)`
-  font-size: 1.5rem;
-  color: #fff;
-  text-decoration: none;
-  position: relative;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: #ffcc29;
-  }
-`;
-
-const CartCount = styled.span`
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #ff6b6b;
-  color: #fff;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 0.8rem;
-`;
-
-const UserIcon = styled(Link)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #fff;
-  margin-left: 15px;
-  cursor: pointer;
-  transition: border 0.3s ease;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  &:hover {
-    border: 2px solid #ffcc29;
-  }
-`;
-
-const Navbar = () => {
+const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [profileImage, setProfileImage] = useState("");
   const navigate = useNavigate();
 
-  // Handle Menu Toggle
   const handleToggle = () => setIsOpen(!isOpen);
 
-  // Sync Login State with LocalStorage
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
 
-    const handleStorageChange = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-    };
-
-    // Listen to localStorage changes
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // Sync Cart Count with LocalStorage
   useEffect(() => {
     const fetchCartCount = async () => {
       try {
@@ -203,15 +38,10 @@ const Navbar = () => {
       fetchCartCount();
     };
 
-    // Listen to localStorage changes
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Fetch Profile Image
   useEffect(() => {
     const fetchProfileImage = async () => {
       try {
@@ -227,65 +57,115 @@ const Navbar = () => {
       }
     };
 
-    fetchProfileImage();
+    if (isLoggedIn) fetchProfileImage();
   }, [isLoggedIn]);
 
-  // Handle Login
-  const handleLogin = () => {
-    localStorage.setItem("token", "dummy-token"); // Add a token
-    setIsLoggedIn(true);
-    navigate('/'); // Navigate to home page to trigger re-render
-  };
-
   return (
-    <NavbarContainer>
-      <MenuButton onClick={handleToggle}>
-        {isOpen ? <span>&#10005;</span> : <span>&#9776;</span>}
-      </MenuButton>
-      <Brand to="/">OrganicStore</Brand>
-      <Menu $isOpen={isOpen}>
-        <MenuItem>
-          <MenuLink to="/" onClick={() => setIsOpen(false)}>
+    <nav className="bg-gradient-to-r from-[#1f4037] to-[#99f2a0] px-4 py-2 sticky top-0 z-50 min-h-[55px] shadow-md">
+      <div className="flex justify-between items-center max-w-7xl mx-auto">
+        {/* Brand */}
+        <Link to="/" className="text-white font-bold text-xl sm:text-2xl uppercase">
+          Organic Sikkim
+        </Link>
+
+        {/* Hamburger */}
+        <button
+          onClick={handleToggle}
+          className="text-white text-2xl md:hidden focus:outline-none"
+        >
+          {isOpen ? "✖" : "☰"}
+        </button>
+
+        {/* Menu */}
+        <div
+          className={`${
+            isOpen ? "flex" : "hidden"
+          } md:flex flex-col md:flex-row md:items-center gap-4 absolute md:static top-full left-0 w-full md:w-auto bg-[#1f4037] md:bg-transparent px-6 md:px-0 py-4 md:py-0 transition-all duration-300`}
+        >
+          <Link
+            to="/"
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:text-black hover:bg-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition"
+          >
             Home
-          </MenuLink>
-        </MenuItem>
-        <MenuItem>
-          <MenuLink to="/shop" onClick={() => setIsOpen(false)}>
+          </Link>
+          <Link
+            to="/shop"
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:text-black hover:bg-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition"
+          >
             Shop
-          </MenuLink>
-        </MenuItem>
-        <MenuItem>
-          <MenuLink to="/about" onClick={() => setIsOpen(false)}>
+          </Link>
+          <Link
+            to="/about"
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:text-black hover:bg-yellow-400 px-3 py-2 rounded-md text-sm font-medium transition"
+          >
             About
-          </MenuLink>
-        </MenuItem>
-        {!isLoggedIn && (
-          <>
-            <MenuItem>
-              <ActionButton onClick={handleLogin}>Login</ActionButton>
-            </MenuItem>
-            <MenuItem>
-              <Link to="/signup" onClick={() => setIsOpen(false)}>
-                <ActionButton>Signup</ActionButton>
+          </Link>
+
+          {!isLoggedIn ? (
+            <>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/login");
+                }}
+                className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition text-sm"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate("/signup");
+                }}
+                className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition text-sm"
+              >
+                Signup
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/cart"
+                onClick={() => setIsOpen(false)}
+                className="relative text-white text-xl hover:text-yellow-400 transition"
+              >
+                <FaShoppingCart />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full px-1.5">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
-            </MenuItem>
-          </>
-        )}
-      </Menu>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        {isLoggedIn && (
-          <>
-            <CartIcon to="/cart">
-              <FaShoppingCart />
-              {cartCount > 0 && <CartCount>{cartCount}</CartCount>}
-            </CartIcon>
-            <UserIcon to="/account">
-              <img src={profileImage || "/images/default-profile.png"} alt="User Profile" />
-            </UserIcon>
-          </>
-        )}
+
+              <Link
+                to="/account"
+                onClick={() => setIsOpen(false)}
+                className="w-9 h-9 rounded-full overflow-hidden border-2 border-white"
+              >
+                <img
+                  src={profileImage || "/images/default-profile.png"}
+                  alt="User Profile"
+                  className="w-full h-full object-cover"
+                />
+              </Link>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+                className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-yellow-400 hover:text-black transition text-sm"
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </NavbarContainer>
+    </nav>
   );
 };
 

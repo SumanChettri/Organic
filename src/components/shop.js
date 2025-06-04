@@ -214,7 +214,7 @@ const Shop = () => {
   return (
     <ShopContainer>
       <Header>
-        <h2>Shop Our Products</h2>
+        <h2 className="text-nowrap">Shop Our Products</h2>
         <FilterContainer>
           <SearchInput
             type="text"

@@ -1,230 +1,32 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
-import { motion } from "framer-motion";
-import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
-import axios from "axios";
-import Navbar from "./Navbar";
-import Footer from "./footer";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
+import Footer from './footer';
+import PaymentModal from './PaymentModal';
 
-// Styled Components for Cart Page
-const PageContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: #f8f9fa;
-`;
-
-const CartContainer = styled(motion.div)`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  flex: 1;
-
-  @media (max-width: 768px) {
-    padding: 10px;
-  }
-`;
-
-const CartWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 800px;
-`;
-
-const CartHeader = styled(motion.h1)`
-  font-size: 2.5rem;
-  color: #333;
-  text-align: center;
-  margin-bottom: 20px;
-  animation: fadeIn 1s ease-in-out;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const CartItem = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px;
-  background: linear-gradient(135deg, #ffffff, #f1f1f1);
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 0.5s ease-in-out;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const ItemDetails = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 15px;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-`;
-
-const ItemImage = styled.img`
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 5px;
-`;
-
-const ItemInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-`;
-
-const ItemTitle = styled.h3`
-  font-size: 1.2rem;
-  color: #333;
-`;
-
-const ItemPrice = styled.p`
-  font-size: 1rem;
-  color: #28a745;
-`;
-
-const ItemQuantity = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1rem;
-  color: #666;
-`;
-
-const QuantityButton = styled(motion.button)`
-  padding: 5px 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: 0.3s;
-
-  &:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-  }
-
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
-`;
-
-const RemoveButton = styled(motion.button)`
-  padding: 10px 15px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  transition: 0.3s;
-
-  &:hover {
-    background-color: #c82333;
-    transform: scale(1.05);
-  }
-`;
-
-const CheckoutSection = styled.div`
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 800px;
-  height: fit-content;
-
-  @media (max-width: 768px) {
-    margin-top: 20px;
-  }
-`;
-
-const SummaryTitle = styled.h2`
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 15px;
-`;
-
-const SummaryItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: 1rem;
-  margin-bottom: 10px;
-  color: #666;
-`;
-
-const SummaryTotal = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #333;
-  margin-top: 15px;
-`;
-
-const CheckoutButton = styled(motion.button)`
-  width: 100%;
-  padding: 12px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: 0.3s;
-
-  &:hover {
-    background-color: #218838;
-    transform: scale(1.05);
-  }
-`;
-
-// Main Component
 const Cart = () => {
   const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const calculateTotal = () => {
+    return cart
+      .reduce((total, item) => total + parseFloat(item.Product.price) * item.quantity, 0)
+      .toFixed(2);
+  };
 
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("Cart data:", response.data); // Debug: Check the data returned by the backend
         setCart(response.data);
       } catch (error) {
-        console.error("Error fetching cart:", error);
+        console.error('Error fetching cart:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -233,92 +35,136 @@ const Cart = () => {
 
   const removeFromCart = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       await axios.delete(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart(cart.filter((item) => item.id !== id));
     } catch (error) {
-      console.error("Error removing from cart:", error);
+      console.error('Error removing from cart:', error);
     }
   };
 
   const updateQuantity = async (id, quantity) => {
+    if (quantity < 1) return;
     try {
-      const token = localStorage.getItem("token");
-      console.log(`Updating quantity for item ${id} to ${quantity}`); // Debug: Log the quantity update
-      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, {
-        quantity
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Update response:", response.data); // Debug: Log the response from the backend
-      setCart(cart.map((item) => item.id === id ? { ...item, quantity } : item));
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/cart/${id}`,
+        { quantity },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setCart(
+        cart.map((item) =>
+          item.id === id ? { ...item, quantity } : item
+        )
+      );
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error('Error updating quantity:', error);
     }
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => total + parseFloat(item.Product.price) * item.quantity, 0).toFixed(2);
+  const handleCheckout = () => {
+    setShowPaymentModal(true);
   };
 
   return (
-    <PageContainer>
-      <Navbar />
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <div className="container mx-auto px-4 py-8 flex-1">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Your Cart</h1>
 
-      <CartContainer>
-        <CartHeader>Your Cart</CartHeader>
-        {/* Cart Items */}
-        <CartWrapper>
-          {cart.map((item) => {
-            const imageUrl = `${process.env.REACT_APP_API_URL}${item.Product.image}`;
-            console.log("Image URL:", imageUrl); // Debug: Check the image URL
-            return (
-              <CartItem key={item.id}>
-                <ItemDetails>
-                  <ItemImage src={imageUrl} alt={item.Product.name} onError={(e) => { e.target.onerror = null; e.target.src='/images/default-image.jpg'; }} />
-                  <ItemInfo>
-                    <ItemTitle>{item.Product.name}</ItemTitle>
-                    <ItemPrice>₹{parseFloat(item.Product.price).toFixed(2)}</ItemPrice>
-                    <ItemQuantity>
-                      <QuantityButton onClick={() => updateQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1}>
-                        <FaMinus />
-                      </QuantityButton>
-                      {item.quantity}
-                      <QuantityButton onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                        <FaPlus />
-                      </QuantityButton>
-                    </ItemQuantity>
-                  </ItemInfo>
-                </ItemDetails>
-                <RemoveButton onClick={() => removeFromCart(item.id)}>
-                  <FaTrash /> Remove
-                </RemoveButton>
-              </CartItem>
-            );
-          })}
-        </CartWrapper>
+        {loading ? (
+          <div className="text-center text-gray-600">Loading...</div>
+        ) : cart.length === 0 ? (
+          <div className="text-center text-gray-600">Your cart is empty.</div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {cart.map((item) => {
+                const imageUrl = `${process.env.REACT_APP_API_URL}${item.Product.image}`;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col md:flex-row items-center justify-between bg-white p-4 rounded-lg shadow-md"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={imageUrl}
+                        alt={item.Product.name}
+                        className="w-24 h-24 object-cover rounded"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/images/default-image.jpg';
+                        }}
+                      />
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-800">{item.Product.name}</h2>
+                        <p className="text-green-600 font-medium">₹{parseFloat(item.Product.price).toFixed(2)}</p>
+                        <div className="flex items-center mt-2 space-x-2">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 disabled:bg-gray-300"
+                          >
+                            <FaMinus />
+                          </button>
+                          <span className="text-gray-700">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                          >
+                            <FaPlus />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="mt-4 md:mt-0 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center space-x-2"
+                    >
+                      <FaTrash />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
 
-        {/* Checkout Section */}
-        <CheckoutSection>
-          <SummaryTitle>Order Summary</SummaryTitle>
-          {cart.map((item) => (
-            <SummaryItem key={item.id}>
-              <span>{item.Product.name}</span>
-              <span>₹{(parseFloat(item.Product.price) * item.quantity).toFixed(2)}</span>
-            </SummaryItem>
-          ))}
-          <SummaryTotal>
-            <span>Total:</span>
-            <span>₹{calculateTotal()}</span>
-          </SummaryTotal>
-          <CheckoutButton>Proceed to Checkout</CheckoutButton>
-        </CheckoutSection>
-      </CartContainer>
-
+            <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Summary</h2>
+              <div className="space-y-2">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex justify-between text-gray-700">
+                    <span>{item.Product.name}</span>
+                    <span>₹{(parseFloat(item.Product.price) * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between text-xl font-semibold text-gray-800 mt-4">
+                <span>Total:</span>
+                <span>₹{calculateTotal()}</span>
+              </div>
+              <button
+                onClick={handleCheckout}
+                className="mt-6 w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg font-medium"
+              >
+                Proceed to Checkout
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      {showPaymentModal && (
+        <PaymentModal
+          amount={calculateTotal()}
+          currency="INR"
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
       <Footer />
-    </PageContainer>
+    </div>
   );
 };
 

@@ -3,7 +3,7 @@ import styled, { keyframes } from "styled-components";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// Keyframes for animations
+// Animations
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -113,8 +113,8 @@ const Link = styled.a`
   }
 `;
 
-// Login Component
-const Login = () => {
+// ✅ Login Component
+const Login = ({ onLogin }) => {
   const [emailOrName, setEmailOrName] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState({ text: "", success: false });
@@ -122,9 +122,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const userData = { emailOrName, password };
-  
+
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/auth/login`,
@@ -132,9 +132,13 @@ const Login = () => {
       );
       localStorage.setItem("token", response.data.token);
       setMessage({ text: "Login successful", success: true });
+
+      // ✅ Inform App.js of login success
+      if (onLogin) onLogin();
+
       setTimeout(() => {
-        navigate("/"); // Redirect to home page
-      }, 2000);
+        navigate("/");
+      }, 1000);
     } catch (error) {
       console.error("Login error:", error);
       setMessage({

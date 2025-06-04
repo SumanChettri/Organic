@@ -147,19 +147,22 @@ function Home() {
           {categories.length > 0 ? (
             categories.map((category, index) => {
               const title = category.category || "Unknown Category";
-              const imageUrl =
-                title === "Fruits"
-                  ? "/imag/fruits.jpg"
-                  : title === "Vegetables"
+              const imageSrc =
+                title === "Vegetables"
                   ? "/imag/vegetables.jpg"
-                  : "/imag/apples.jpg";
+                  : title === "Herbs"
+                  ? "/imag/herb.jpg"
+                  : title === "Fruits"
+                  ? "/imag/fruits.jpg"
+                  : "/imag/vegetables.jpg"; // fallback
+
               return (
                 <div
                   key={index}
                   className="bg-white shadow-lg rounded-lg overflow-hidden w-80 hover:scale-105 transform transition duration-300"
                 >
                   <img
-                    src={imageUrl}
+                    src={imageSrc}
                     alt={title}
                     className="w-full h-48 object-cover"
                     onError={(e) => {
