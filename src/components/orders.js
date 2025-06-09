@@ -101,7 +101,7 @@ const Orders = () => {
       const headers = getAuthHeaders();
       if (!headers) return;
 
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders/my-orders`, {
         headers,
       });
 

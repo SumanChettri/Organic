@@ -1,7 +1,9 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const sequelize = require('../db/connection');
 
-const Product = sequelize.define('Product', {
+class Product extends Model {}
+
+Product.init({
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -14,14 +16,6 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  description: {
-    type: DataTypes.TEXT,
-    allowNull: false,
-  },
-  rating: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
   priceUnit: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -30,6 +24,11 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+}, {
+  sequelize,
+  modelName: 'Product',
+  tableName: 'products',
+  timestamps: true
 });
 
 module.exports = Product;

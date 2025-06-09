@@ -2,140 +2,141 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const Product = require('../models/Product'); // Import Sequelize Product model
+const Product = require('../models/Product');
 
 const router = express.Router();
 
-// Path for the public/images folder
+// Path to store images
 const imageDir = path.join(__dirname, '../../public/images');
 
-// Ensure the 'public/images' folder exists
+// Ensure image directory exists
 if (!fs.existsSync(imageDir)) {
     fs.mkdirSync(imageDir, { recursive: true });
 }
 
-// Configure multer for image upload
+// Configure multer
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, imageDir);
-    },
+    destination: (req, file, cb) => cb(null, imageDir),
     filename: (req, file, cb) => {
-        const fileName = Date.now() + path.extname(file.originalname);
-        cb(null, fileName);
-    },
+        const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+        cb(null, uniqueName);
+    }
 });
+
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(path.extname(file.originalname).toLowerCase());
+
+    if (isValid) cb(null, true);
+    else cb(new Error('Only .jpeg, .jpg, .png files are allowed!'));
+};
 
 const upload = multer({
     storage,
-    limits: { fileSize: 1024 * 1024 }, // 1MB limit
-    fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimetype && extname) {
-            return cb(null, true);
-        }
-        cb(new Error('Only .jpeg, .jpg, .png files are allowed!'));
-    },
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+    fileFilter
 });
 
-// Add a product
+// Helper to delete image file
+const deleteImage = (imagePath) => {
+    if (!imagePath) return;
+    const fullPath = path.join(__dirname, '../../public', imagePath);
+    fs.unlink(fullPath, (err) => {
+        if (err) console.warn('Failed to delete image:', err.message);
+    });
+};
+
+// -------------------- ROUTES --------------------
+
+// POST: Add a new product
 router.post('/products', upload.single('image'), async (req, res) => {
     try {
         const { name, price, priceUnit, category } = req.body;
-
-        // Validate required fields
         if (!name || !price || !priceUnit || !category || !req.file) {
-            return res.status(400).json({ error: 'All fields are required' });
+            return res.status(400).json({ error: 'All fields are required including an image' });
         }
 
-        const imagePath = `/images/${req.file.filename}`; // Path to the uploaded image
-
-        // Insert the product into the database using Sequelize
         const product = await Product.create({
             name,
             price,
             priceUnit,
             category,
-            image: imagePath,
+            image: `/images/${req.file.filename}`
         });
 
         res.status(201).json({ message: 'Product added successfully', product });
     } catch (error) {
-        console.error('Error adding product:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to add product' });
     }
 });
 
-// Get all products
+// GET: All products
 router.get('/products', async (req, res) => {
     try {
-        const products = await Product.findAll(); // Fetch all products
+        const products = await Product.findAll({ order: [['createdAt', 'DESC']] });
         res.status(200).json(products);
     } catch (error) {
-        console.error('Error fetching products:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch products' });
     }
 });
 
-// Get a product by ID
+// GET: Product by ID
 router.get('/product/:id', async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
-
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
+        if (!product) return res.status(404).json({ error: 'Product not found' });
 
         res.status(200).json(product);
     } catch (error) {
-        console.error('Error fetching product:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Error retrieving product' });
     }
 });
 
-// Delete a product
+// DELETE: Product by ID
 router.delete('/products/:id', async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
+        if (!product) return res.status(404).json({ error: 'Product not found' });
 
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
+        deleteImage(product.image); // Delete image from server
+        await product.destroy();
 
-        await product.destroy(); // Delete the product
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
-        console.error('Error deleting product:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Error deleting product' });
     }
 });
 
-// Update a product
+// PUT: Update product by ID
 router.put('/products/:id', upload.single('image'), async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
-
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
+        if (!product) return res.status(404).json({ error: 'Product not found' });
 
         const { name, price, priceUnit, category } = req.body;
-        const imagePath = req.file ? `/images/${req.file.filename}` : product.image;
-
-        await product.update({
+        const updateData = {
             name: name || product.name,
             price: price || product.price,
             priceUnit: priceUnit || product.priceUnit,
-            category: category || product.category,
-            image: imagePath,
-        });
+            category: category || product.category
+        };
+
+        if (req.file) {
+            // Delete old image
+            deleteImage(product.image);
+            updateData.image = `/images/${req.file.filename}`;
+        }
+
+        await product.update(updateData);
 
         res.status(200).json({ message: 'Product updated successfully', product });
     } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error(error);
+        res.status(500).json({ error: 'Error updating product' });
     }
 });
 

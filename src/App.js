@@ -13,6 +13,7 @@ import Acc from "./components/UserAccount";
 import Order from "./components/orders";
 import About from './components/About';
 
+
 function AppContent({ isLoggedIn, setIsLoggedIn, handleLogin }) {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");

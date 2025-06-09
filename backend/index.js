@@ -16,7 +16,6 @@ const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/orders');
 const AdminLogin = require('./routes/adminAuth');
-
 const app = express();
 const port = process.env.PORT || 5000;
 

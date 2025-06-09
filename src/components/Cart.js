@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
 import Footer from './footer';
-import PaymentModal from './PaymentModal';
 
 const Cart = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const calculateTotal = () => {
     return cart
@@ -66,8 +64,32 @@ const Cart = () => {
     }
   };
 
-  const handleCheckout = () => {
-    setShowPaymentModal(true);
+  // Fake order now function (no payment gateway)
+  const handleOrderNow = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to order.');
+      return;
+    }
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/orders/fake`,
+        {
+          items: cart.map(item => ({
+            product_id: item.Product.id,
+            quantity: item.quantity
+          })),
+          payment_method: 'fake',
+          clearCart: true
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Order placed successfully!');
+      setCart([]);
+    } catch (error) {
+      alert('Failed to place order');
+      console.error(error);
+    }
   };
 
   return (
@@ -147,22 +169,15 @@ const Cart = () => {
                 <span>₹{calculateTotal()}</span>
               </div>
               <button
-                onClick={handleCheckout}
-                className="mt-6 w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg font-medium"
+                onClick={handleOrderNow}
+                className="mt-6 w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 text-lg font-medium"
               >
-                Proceed to Checkout
+                Order Now
               </button>
             </div>
           </>
         )}
       </div>
-      {showPaymentModal && (
-        <PaymentModal
-          amount={calculateTotal()}
-          currency="INR"
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )}
       <Footer />
     </div>
   );

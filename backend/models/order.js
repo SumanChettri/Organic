@@ -1,32 +1,49 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../db/connection'); // Apna DB connection import karo
+const { DataTypes, Model } = require('sequelize');
+const sequelize = require('../db/connection');
 
-// Order model define karo
-const Order = sequelize.define('orders', {
+class Order extends Model {}
+
+Order.init({
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   product_id: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   quantity: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: false,
   },
   payment_method: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: 'pending'
+    defaultValue: 'pending',
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
   }
 }, {
-  timestamps: true,         // createdAt aur updatedAt ko enable karta hai
-  createdAt: 'created_at',  // createdAt ko 'created_at' ke naam se store karo
-  updatedAt: 'updated_at'   // updatedAt ko 'updated_at' ke naam se store karo
+  sequelize,
+  modelName: 'Order',
+  tableName: 'orders',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 module.exports = Order;
